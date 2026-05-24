@@ -123,6 +123,27 @@ app.post('/api/config/save', async (req, res) => {
   }
 });
 
+app.post('/api/config/reset', async (req, res) => {
+  try {
+    const updated = saveConfig({
+      baseUrl: 'https://api.waland.dev',
+      port: 3000,
+      token: '',
+      organizationId: '',
+      apiKey: '',
+      activeSessionId: ''
+    });
+    activeOrgSet = false;
+
+    // Clear SQLite tables
+    await db.clearAllData();
+
+    res.json({ success: true, config: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ── AJAX Auth Routes (Waland session-token based) ──
 
 app.post('/api/auth/register', async (req, res) => {

@@ -584,3 +584,22 @@ async function refreshMessageLogs() {
     showToast(err.message, 'error');
   }
 }
+
+async function handleResetAll() {
+  if (!confirm('Are you sure you want to reset everything? This will clear all credentials from config.json and empty the local SQLite database (sessions & messages). This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/config/reset', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('System reset completed successfully!', 'success');
+      setTimeout(() => window.location.href = '/', 1500);
+    } else {
+      showToast(data.error || 'Reset failed', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}

@@ -152,5 +152,11 @@ module.exports = {
 
   getMessagesBySession: async (sessionId) => {
     return dbAll('SELECT * FROM messages WHERE sessionId = ? ORDER BY createdAt DESC', [sessionId]);
+  },
+
+  clearAllData: async () => {
+    await dbRun('DELETE FROM sessions');
+    await dbRun('DELETE FROM messages');
+    return true;
   }
 };

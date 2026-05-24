@@ -102,8 +102,11 @@
                     <input type="password" class="form-control form-control-sm" id="cfg-api-key" value="<%= config.apiKey %>" placeholder="waland_...">
                   </div>
                   <input type="hidden" id="cfg-active-session" value="<%= config.activeSessionId %>">
-                  <button type="submit" class="btn btn-whatsapp-teal btn-sm w-100">
+                  <button type="submit" class="btn btn-whatsapp-teal btn-sm w-100 mb-2">
                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Credentials
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="handleResetAll()">
+                    <i class="fa-solid fa-trash-can me-1"></i> Reset All Settings
                   </button>
                 </form>
               </div>
@@ -221,9 +224,14 @@
               <input type="text" class="form-control font-monospace" id="cfg-active-session" value="<%= config.activeSessionId %>" placeholder="None Selected">
             </div>
 
-            <button type="submit" class="btn btn-whatsapp-teal">
-              <i class="fa-solid fa-floppy-disk me-1"></i> Save Configuration
-            </button>
+            <div class="d-flex justify-content-between align-items-center">
+              <button type="submit" class="btn btn-whatsapp-teal">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Save Configuration
+              </button>
+              <button type="button" class="btn btn-outline-danger" onclick="handleResetAll()">
+                <i class="fa-solid fa-trash-can me-1"></i> Reset All
+              </button>
+            </div>
           </form>
         </div>
       </div>
