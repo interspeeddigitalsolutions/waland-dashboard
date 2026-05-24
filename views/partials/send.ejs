@@ -44,3 +44,63 @@
     </form>
   </div>
 </div>
+
+<!-- Developer Guide: curl command -->
+<div class="card shadow-sm border max-width-card mx-auto mt-4" style="max-width: 700px;">
+  <div class="card-header bg-white py-3">
+    <h5 class="card-title mb-0 fw-bold text-dark"><i class="fa-solid fa-code me-2 text-whatsapp-teal"></i>Developer API Guide</h5>
+  </div>
+  <div class="card-body">
+    <p class="small text-muted mb-3">You can automate WhatsApp message dispatching programmatically. Use the pre-configured curl commands below to integrate with your systems:</p>
+    
+    <!-- Tabs for Local vs Direct API -->
+    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist" style="font-size: 0.82rem;">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active py-1 px-3" id="pills-local-tab" data-bs-toggle="pill" data-bs-target="#pills-local" type="button" role="tab" aria-controls="pills-local" aria-selected="true">Local Wrapper API</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link py-1 px-3" id="pills-direct-tab" data-bs-toggle="pill" data-bs-target="#pills-direct" type="button" role="tab" aria-controls="pills-direct" aria-selected="false">Direct Waland API</button>
+      </li>
+    </ul>
+    
+    <div class="tab-content" id="pills-tabContent">
+      <!-- Local Wrapper API -->
+      <div class="tab-pane fade show active" id="pills-local" role="tabpanel" aria-labelledby="pills-local-tab">
+        <div class="position-relative">
+          <pre class="bg-dark text-white p-3 rounded small font-monospace" style="overflow-x: auto; white-space: pre-wrap; word-break: break-all;" id="curl-local-code">
+curl -X POST "<span class="text-info" id="curl-local-origin">http://localhost:3000</span>/api/messages/send" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "<span class="text-success"><%= config.activeSessionId || 'YOUR_SESSION_ID' %></span>",
+    "chatId": "8801712345678",
+    "text": "Hello from local wrapper!",
+    "mediaUrl": null
+  }'</pre>
+          <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" onclick="copyCode('curl-local-code')" title="Copy Command">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+        <div class="form-text text-muted small"><i class="fa-solid fa-circle-info me-1"></i> The local wrapper API formats the recipient phone number to a valid WhatsApp Chat ID automatically on dispatch.</div>
+      </div>
+      
+      <!-- Direct Waland API -->
+      <div class="tab-pane fade" id="pills-direct" role="tabpanel" aria-labelledby="pills-direct-tab">
+        <div class="position-relative">
+          <pre class="bg-dark text-white p-3 rounded small font-monospace" style="overflow-x: auto; white-space: pre-wrap; word-break: break-all;" id="curl-direct-code">
+curl -X POST "<%= config.baseUrl || 'https://api.waland.dev' %>/v1/sessions/<span class="text-success"><%= config.activeSessionId || 'YOUR_SESSION_ID' %></span>/send" \
+  -H "Authorization: Bearer <span class="text-warning"><%= config.apiKey || 'YOUR_API_KEY' %></span>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chatId": "8801712345678@c.us",
+    "text": "Hello directly from Waland!",
+    "mediaUrl": null
+  }'</pre>
+          <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" onclick="copyCode('curl-direct-code')" title="Copy Command">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+        <div class="form-text text-muted small"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Direct API requires formatting phone number to full WhatsApp JID format (e.g. <code>8801712345678@c.us</code>).</div>
+      </div>
+    </div>
+  </div>
+</div>

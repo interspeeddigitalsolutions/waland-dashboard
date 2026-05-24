@@ -603,3 +603,21 @@ async function handleResetAll() {
     showToast(err.message, 'error');
   }
 }
+
+function copyCode(elementId) {
+  const pre = document.getElementById(elementId);
+  if (!pre) return;
+  const text = pre.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Command copied to clipboard!', 'success');
+  }).catch(err => {
+    showToast('Failed to copy command: ' + err.message, 'error');
+  });
+}
+
+window.addEventListener('load', () => {
+  const originSpan = document.getElementById('curl-local-origin');
+  if (originSpan) {
+    originSpan.innerText = window.location.origin;
+  }
+});
