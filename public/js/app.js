@@ -5,16 +5,16 @@ let authAction = 'login';
 
 // Tab Switching
 function switchTab(tabName) {
-  // Update nav link active states
-  document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+  // Update nav link active states (only top-level dashboard tabs, to prevent breaking nested tabs)
+  document.querySelectorAll('#dashboard-tabs .nav-link').forEach(btn => btn.classList.remove('active'));
   // Update pane active states (only top-level main panes, to prevent breaking nested tabs)
   document.querySelectorAll('main > .tab-pane').forEach(pane => {
     pane.classList.add('d-none');
     pane.classList.remove('show', 'active');
   });
 
-  // Find active button
-  const activeBtn = document.querySelector(`.nav-link[onclick*="switchTab('${tabName}')"]`);
+  // Find active button (only top-level dashboard tabs)
+  const activeBtn = document.querySelector(`#dashboard-tabs .nav-link[onclick*="switchTab('${tabName}')"]`);
   if (activeBtn) activeBtn.classList.add('active');
 
   // Show active pane
