@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waland M2M Dashboard</title>
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/style.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom WhatsApp Branding CSS -->
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body>
+
+  <div class="container py-4">
+    <!-- Modular Header Partial -->
+    <%- include('partials/header') %>
+
+    <!-- Main Workspace Container -->
+    <main>
+      <% if (!config.apiKey) { %>
+        <!-- Gated/Setup Required view: only Onboarding Wizard is shown -->
+        <div id="pane-credentials" class="tab-pane">
+          <%- include('partials/setup') %>
+        </div>
+      <% } else { %>
+        <!-- Fully Configured Workspace -->
+        
+        <!-- Sessions Tab -->
+        <div id="pane-sessions" class="tab-pane">
+          <%- include('partials/sessions') %>
+        </div>
+
+        <!-- Send Message Tab -->
+        <div id="pane-send" class="tab-pane d-none">
+          <%- include('partials/send') %>
+        </div>
+
+        <!-- Message History Logs Tab -->
+        <div id="pane-logs" class="tab-pane d-none">
+          <%- include('partials/logs') %>
+        </div>
+
+        <!-- Credentials/Setup Tab -->
+        <div id="pane-credentials" class="tab-pane d-none">
+          <%- include('partials/setup') %>
+        </div>
+      <% } %>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  
+  <!-- Consolidated Modular JavaScript -->
+  <script src="/js/app.js"></script>
+
+  <!-- Dynamic Server Initialization Scripts -->
+  <script>
+    window.addEventListener('load', () => {
+      <% if (config.apiKey && sessions && sessions.length > 0) { %>
+        <% sessions.forEach(session => { %>
+          <% if (session.status === 'initializing' || session.status === 'authenticating' || session.status === 'qr_ready') { %>
+            pollSessionStatus('<%= session.id %>');
+            <% if (session.status === 'qr_ready') { %>
+              // Automatically fetch QR code for any sessions waiting in qr_ready state
+              viewQrCode('<%= session.id %>');
+            <% } %>
+          <% } %>
+        <% }) %>
+      <% } %>
+    });
+  </script>
+</body>
+</html>

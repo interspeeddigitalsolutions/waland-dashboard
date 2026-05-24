@@ -1,0 +1,232 @@
+<% if (!config.apiKey) { %>
+  <!-- Restricted View: Onboarding Only -->
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card shadow border">
+        <div class="card-header bg-white py-3">
+          <h5 class="card-title mb-0 fw-bold text-dark text-center"><i class="fa-solid fa-user-shield me-2 text-whatsapp-teal"></i>Waland Setup Required</h5>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info py-2 small mb-4">
+            <i class="fa-solid fa-circle-info me-1"></i> You must register a new account or sign in to configure your Waland API Key before using the dashboard.
+          </div>
+          
+          <!-- Onboarding Form inside the single gated panel -->
+          <div class="d-flex flex-column gap-4">
+            <!-- Register/Login -->
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-user-lock me-1"></i> 1. Sign In or Create Account</h6>
+              <form id="assistant-login-form" onsubmit="handleAssistantLogin(event)">
+                <div class="mb-3">
+                  <label for="assistant-email" class="form-label small fw-semibold">Email Address</label>
+                  <input type="email" class="form-control form-control-sm" id="assistant-email" required>
+                </div>
+                <div class="mb-3">
+                  <label for="assistant-password" class="form-label small fw-semibold">Password (min 8 chars)</label>
+                  <input type="password" class="form-control form-control-sm" id="assistant-password" minlength="8" required>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-whatsapp-teal btn-sm" onclick="setAuthAction('login')">
+                    <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                  </button>
+                  <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="setAuthAction('register')">
+                    <i class="fa-solid fa-user-plus me-1"></i> Register
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Organization list -->
+            <div id="org-helper-box" class="border rounded p-3 bg-light <%= config.token ? '' : 'd-none' %>">
+              <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-users me-1"></i> 2. Select Organization</h6>
+              <div class="d-flex gap-2 align-items-end mb-3">
+                <div class="flex-grow-1">
+                  <label for="assistant-org-select" class="form-label small fw-semibold">Fetched Organizations</label>
+                  <select class="form-select form-select-sm" id="assistant-org-select">
+                    <option value="">-- Click Retrieve below --</option>
+                  </select>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="fetchOrganizations()" type="button">
+                  Retrieve
+                </button>
+              </div>
+              <button class="btn btn-whatsapp-teal btn-sm" onclick="saveSelectedOrganization()" id="btn-save-org" disabled>
+                Select & Continue
+              </button>
+            </div>
+
+            <!-- Create API Key -->
+            <div id="api-helper-box" class="border rounded p-3 bg-light <%= config.token && config.organizationId ? '' : 'd-none' %>">
+              <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-key me-1"></i> 3. Generate Integration API Key</h6>
+              <div class="mb-3">
+                <label for="assistant-key-name" class="form-label small fw-semibold">API Key Name</label>
+                <input type="text" class="form-control class-control-sm" id="assistant-key-name" value="waland-dashboard-wrapper">
+              </div>
+              <button class="btn btn-whatsapp-green btn-sm" onclick="createWalandApiKey()" type="button">
+                Generate Key & Auto-configure
+              </button>
+            </div>
+            
+            <div class="text-center mt-2 border-top pt-3">
+              <p class="small text-muted mb-1">Already have an API Key? Configure it manually by clicking below:</p>
+              <button class="btn btn-link btn-sm text-whatsapp-teal text-decoration-none fw-semibold" onclick="document.getElementById('manual-editor-card').classList.remove('d-none'); this.parentElement.remove();">
+                <i class="fa-solid fa-wrench me-1"></i> Show Manual Configuration Editor
+              </button>
+            </div>
+
+            <!-- Manual Editor hidden initially when gating, but can be revealed -->
+            <div class="card border mt-2 d-none" id="manual-editor-card">
+              <div class="card-header bg-white py-2">
+                <h6 class="mb-0 fw-bold text-dark">Manual Configuration Editor</h6>
+              </div>
+              <div class="card-body">
+                <form id="config-form" onsubmit="handleSaveConfig(event)">
+                  <div class="mb-2">
+                    <label for="cfg-base-url" class="form-label small mb-1">Waland API Base URL</label>
+                    <input type="url" class="form-control form-control-sm" id="cfg-base-url" value="<%= config.baseUrl %>" required>
+                  </div>
+                  <div class="mb-2">
+                    <label for="cfg-port" class="form-label small mb-1">Express Server Port</label>
+                    <input type="number" class="form-control form-control-sm" id="cfg-port" value="<%= config.port %>" required>
+                  </div>
+                  <div class="mb-2">
+                    <label for="cfg-token" class="form-label small mb-1">User Session Token</label>
+                    <input type="text" class="form-control form-control-sm" id="cfg-token" value="<%= config.token %>" placeholder="e.g. EGqP5ctRVzKX33Pvq...">
+                  </div>
+                  <div class="mb-2">
+                    <label for="cfg-org-id" class="form-label small mb-1">Organization ID</label>
+                    <input type="text" class="form-control form-control-sm" id="cfg-org-id" value="<%= config.organizationId %>" placeholder="e.g. 6a12611363263189af5a00dc">
+                  </div>
+                  <div class="mb-3">
+                    <label for="cfg-api-key" class="form-label small mb-1">Org API Key (starts with <code>waland_</code>)</label>
+                    <input type="password" class="form-control form-control-sm" id="cfg-api-key" value="<%= config.apiKey %>" placeholder="waland_...">
+                  </div>
+                  <input type="hidden" id="cfg-active-session" value="<%= config.activeSessionId %>">
+                  <button type="submit" class="btn btn-whatsapp-teal btn-sm w-100">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Credentials
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <!-- Fully Configured View: Onboarding Assistant + Manual Editor side-by-side -->
+  <div class="row g-4">
+    <!-- Left Column: Onboarding Assistant -->
+    <div class="col-md-6">
+      <div class="card shadow-sm border h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="card-title mb-0 fw-bold text-dark"><i class="fa-solid fa-wand-magic-sparkles me-2 text-whatsapp-teal"></i>Waland Onboarding Assistant</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-column gap-3">
+            <!-- Register/Login -->
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-2 text-dark" style="font-size: 0.9rem;"><i class="fa-solid fa-user-lock me-1"></i> 1. Sign In or Register new account</h6>
+              <form id="assistant-login-form" onsubmit="handleAssistantLogin(event)">
+                <div class="mb-2">
+                  <label for="assistant-email" class="form-label small mb-1">Email Address</label>
+                  <input type="email" class="form-control form-control-sm" id="assistant-email" required>
+                </div>
+                <div class="mb-2">
+                  <label for="assistant-password" class="form-label small mb-1">Password</label>
+                  <input type="password" class="form-control form-control-sm" id="assistant-password" minlength="8" required>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-whatsapp-teal btn-sm" onclick="setAuthAction('login')">
+                    <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                  </button>
+                  <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="setAuthAction('register')">
+                    <i class="fa-solid fa-user-plus me-1"></i> Register
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Organization list -->
+            <div id="org-helper-box" class="border rounded p-3 bg-light <%= config.token ? '' : 'd-none' %>">
+              <h6 class="fw-bold mb-2 text-dark" style="font-size: 0.9rem;"><i class="fa-solid fa-users me-1"></i> 2. Select Organization</h6>
+              <div class="d-flex gap-2 align-items-end mb-2">
+                <div class="flex-grow-1">
+                  <label for="assistant-org-select" class="form-label small mb-1">Organizations</label>
+                  <select class="form-select form-select-sm" id="assistant-org-select">
+                    <option value="">-- Retrieve organizations --</option>
+                  </select>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="fetchOrganizations()" type="button">
+                  Retrieve
+                </button>
+              </div>
+              <button class="btn btn-whatsapp-teal btn-sm" onclick="saveSelectedOrganization()" id="btn-save-org" disabled>
+                Select & Continue
+              </button>
+            </div>
+
+            <!-- Create API Key -->
+            <div id="api-helper-box" class="border rounded p-3 bg-light <%= config.token && config.organizationId ? '' : 'd-none' %>">
+              <h6 class="fw-bold mb-2 text-dark" style="font-size: 0.9rem;"><i class="fa-solid fa-key me-1"></i> 3. Generate Integration API Key</h6>
+              <div class="mb-2">
+                <label for="assistant-key-name" class="form-label small mb-1">API Key Name</label>
+                <input type="text" class="form-control form-control-sm" id="assistant-key-name" value="waland-dashboard-wrapper">
+              </div>
+              <button class="btn btn-whatsapp-green btn-sm" onclick="createWalandApiKey()" type="button">
+                Generate Key & Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Manual Editor -->
+    <div class="col-md-6">
+      <div class="card shadow-sm border h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="card-title mb-0 fw-bold text-dark"><i class="fa-solid fa-wrench me-2 text-whatsapp-teal"></i>Manual Configuration Editor</h5>
+        </div>
+        <div class="card-body">
+          <form id="config-form" onsubmit="handleSaveConfig(event)">
+            <div class="mb-3">
+              <label for="cfg-base-url" class="form-label small fw-semibold">Waland API Base URL</label>
+              <input type="url" class="form-control" id="cfg-base-url" value="<%= config.baseUrl %>" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="cfg-port" class="form-label small fw-semibold">Express Server Port</label>
+              <input type="number" class="form-control" id="cfg-port" value="<%= config.port %>" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="cfg-token" class="form-label small fw-semibold">Waland User Session Token</label>
+              <input type="text" class="form-control font-monospace text-truncate" id="cfg-token" value="<%= config.token %>" placeholder="None Configured">
+            </div>
+
+            <div class="mb-3">
+              <label for="cfg-org-id" class="form-label small fw-semibold">Active Organization ID</label>
+              <input type="text" class="form-control font-monospace" id="cfg-org-id" value="<%= config.organizationId %>" placeholder="None Selected">
+            </div>
+
+            <div class="mb-3">
+              <label for="cfg-api-key" class="form-label small fw-semibold">Org API Key (starts with <code>waland_</code>)</label>
+              <input type="password" class="form-control font-monospace" id="cfg-api-key" value="<%= config.apiKey %>" placeholder="waland_...">
+            </div>
+
+            <div class="mb-3">
+              <label for="cfg-active-session" class="form-label small fw-semibold">Active WhatsApp Session ID</label>
+              <input type="text" class="form-control font-monospace" id="cfg-active-session" value="<%= config.activeSessionId %>" placeholder="None Selected">
+            </div>
+
+            <button type="submit" class="btn btn-whatsapp-teal">
+              <i class="fa-solid fa-floppy-disk me-1"></i> Save Configuration
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>

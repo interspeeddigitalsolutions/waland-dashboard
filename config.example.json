@@ -1,0 +1,8 @@
+{
+  "baseUrl": "https://api.waland.dev",
+  "port": 3000,
+  "token": "",
+  "organizationId": "",
+  "apiKey": "",
+  "activeSessionId": ""
+}

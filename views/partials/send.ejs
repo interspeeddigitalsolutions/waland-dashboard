@@ -1,0 +1,46 @@
+<div class="card shadow-sm border max-width-card mx-auto" style="max-width: 700px;">
+  <div class="card-header bg-white py-3">
+    <h5 class="card-title mb-0 fw-bold text-dark">Send WhatsApp Message</h5>
+  </div>
+  
+  <div class="card-body">
+    <form id="send-message-form" onsubmit="handleSendMessage(event)">
+      
+      <div class="mb-3">
+        <label for="send-session-id" class="form-label small fw-semibold">Select WhatsApp Session</label>
+        <select class="form-select" id="send-session-id" required>
+          <option value="">-- Choose a Ready Session --</option>
+          <% if (sessions && sessions.length > 0) { %>
+            <% sessions.forEach(session => { %>
+              <option value="<%= session.id %>" <%= config.activeSessionId === session.id ? 'selected' : '' %> <%= session.status !== 'ready' ? 'disabled' : '' %>>
+                <%= session.name %> (<%= session.status.toUpperCase() %>) <%= session.phone ? ` - ${session.phone}` : '' %>
+              </option>
+            <% }) %>
+          <% } %>
+        </select>
+        <div class="form-text text-muted small mt-1">Only sessions in <strong>ready</strong> status can dispatch messages.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="send-recipient" class="form-label small fw-semibold">Recipient Phone Number (International Format)</label>
+        <input type="text" class="form-control" id="send-recipient" placeholder="e.g. 8801712345678" required>
+        <div class="form-text text-muted small mt-1">Exclude the plus (+) sign or leading zeros. Format with country code (e.g. 15551234567 for USA).</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="send-message-text" class="form-label small fw-semibold">Message Body</label>
+        <textarea class="form-control" id="send-message-text" rows="4" placeholder="Type your text message here..." required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="send-media-url" class="form-label small fw-semibold">Media Attachment URL (Optional)</label>
+        <input type="url" class="form-control" id="send-media-url" placeholder="https://domain.com/image.png">
+        <div class="form-text text-muted small mt-1">Provide a public HTTPS link to an image, video, document, or audio file to send as an attachment.</div>
+      </div>
+
+      <button type="submit" class="btn btn-whatsapp-teal" id="btn-send-message">
+        <i class="fa-solid fa-paper-plane me-1"></i> Dispatch Message
+      </button>
+    </form>
+  </div>
+</div>

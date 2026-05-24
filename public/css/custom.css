@@ -1,0 +1,99 @@
+:root {
+  --wa-teal: #128c7e;
+  --wa-teal-dark: #075e54;
+  --wa-green: #25d366;
+  --wa-green-dark: #00a884;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+/* Custom WhatsApp branding buttons */
+.btn-whatsapp-teal {
+  background-color: var(--wa-teal);
+  color: #fff;
+}
+.btn-whatsapp-teal:hover, .btn-whatsapp-teal:focus {
+  background-color: var(--wa-teal-dark);
+  color: #fff;
+}
+
+.btn-whatsapp-green {
+  background-color: var(--wa-green-dark);
+  color: #fff;
+}
+.btn-whatsapp-green:hover, .btn-whatsapp-green:focus {
+  background-color: #008f72;
+  color: #fff;
+}
+
+/* Status indicator styling */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.bg-ready { background-color: var(--wa-green-dark); }
+.bg-qr_ready { background-color: #ffc107; }
+.bg-initializing { background-color: #17a2b8; animation: pulse-opacity 1.5s infinite; }
+.bg-authenticating { background-color: #17a2b8; animation: pulse-opacity 1.5s infinite; }
+.bg-disconnected { background-color: #dc3545; }
+.bg-failed { background-color: #dc3545; }
+.bg-created { background-color: #6c757d; }
+
+@keyframes pulse-opacity {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* Custom layout overrides */
+.nav-pills .nav-link {
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.nav-pills .nav-link:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+.nav-pills .nav-link.active {
+  background-color: #e8f5e9;
+  color: var(--wa-teal);
+  font-weight: 600;
+}
+
+.card.active-session {
+  border-left: 4px solid var(--wa-teal);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.qr-image {
+  max-width: 200px;
+  height: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Toast positioning */
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1100;
+}
+
+.msg-text-cell {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

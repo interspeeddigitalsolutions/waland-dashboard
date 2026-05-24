@@ -1,0 +1,141 @@
+<div class="row g-4">
+  <!-- Left Side: Sessions List & Creator -->
+  <div class="col-lg-8">
+    
+    <!-- Sessions Card -->
+    <div class="card mb-4 shadow-sm border">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="card-title mb-0 fw-bold text-dark">Active WhatsApp Sessions</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="syncSessions()" <%= !config.apiKey ? 'disabled' : '' %>>
+          <i class="fa-solid fa-rotate me-1"></i> Sync from Waland
+        </button>
+      </div>
+      
+      <div class="card-body">
+        <% if (sessions && sessions.length > 0) { %>
+          <div class="row g-3" id="session-cards-container">
+            <% sessions.forEach(session => { %>
+              <div class="col-md-6">
+                <div class="card h-100 border <%= config.activeSessionId === session.id ? 'active-session' : '' %>" id="session-card-<%= session.id %>">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h6 class="fw-bold mb-0 text-truncate" style="max-width: 60%;"><%= session.name %></h6>
+                      <span class="badge bg-light text-dark border px-2 py-1" id="status-badge-<%= session.id %>" style="font-size: 0.75rem;">
+                        <span class="status-dot bg-<%= session.status %> me-1"></span>
+                        <%= session.status.toUpperCase() %>
+                      </span>
+                    </div>
+
+                    <div class="small mb-1 text-muted d-flex justify-content-between">
+                      <span>ID:</span>
+                      <span class="font-monospace text-dark text-truncate ms-2" style="max-width: 70%;"><%= session.id %></span>
+                    </div>
+                    <div class="small mb-1 text-muted d-flex justify-content-between">
+                      <span>Phone:</span>
+                      <span class="font-monospace text-dark"><%= session.phone || 'Not Linked' %></span>
+                    </div>
+                    <div class="small mb-3 text-muted d-flex justify-content-between">
+                      <span>Push Name:</span>
+                      <span class="text-dark text-truncate ms-2" style="max-width: 65%;"><%= session.pushName || 'N/A' %></span>
+                    </div>
+
+                    <% if (session.lastError && session.lastError !== 'stopped by user') { %>
+                      <div class="alert alert-danger p-2 mb-3 small" id="error-<%= session.id %>" style="font-size: 0.8rem;">
+                        <strong>Error:</strong> <%= session.lastError %>
+                      </div>
+                    <% } %>
+
+                    <div class="d-flex gap-2 align-items-center" id="btn-group-<%= session.id %>">
+                      <!-- Start Button -->
+                      <button class="btn btn-whatsapp-teal btn-sm <%= (session.status === 'created' || session.status === 'disconnected' || session.status === 'failed') ? '' : 'd-none' %>" 
+                              id="btn-start-<%= session.id %>" 
+                              onclick="startSession('<%= session.id %>')">
+                        <i class="fa-solid fa-play"></i> Start
+                      </button>
+                      
+                      <!-- Stop Button -->
+                      <button class="btn btn-outline-danger btn-sm <%= (session.status === 'ready' || session.status === 'initializing' || session.status === 'qr_ready' || session.status === 'authenticating') ? '' : 'd-none' %>" 
+                              id="btn-stop-<%= session.id %>" 
+                              onclick="stopSession('<%= session.id %>')">
+                        <i class="fa-solid fa-stop"></i> Stop
+                      </button>
+                      
+                      <!-- Scan QR Button -->
+                      <button class="btn btn-whatsapp-green btn-sm <%= (session.status === 'qr_ready') ? '' : 'd-none' %>" 
+                              id="btn-qr-<%= session.id %>" 
+                              onclick="viewQrCode('<%= session.id %>')">
+                        <i class="fa-solid fa-qrcode"></i> Scan QR
+                      </button>
+
+                      <button class="btn btn-outline-secondary btn-sm" onclick="selectActiveSession('<%= session.id %>')">
+                        <i class="fa-solid fa-check"></i> Use
+                      </button>
+                      
+                      <button class="btn btn-danger btn-sm ms-auto" onclick="deleteSession('<%= session.id %>')">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-mobile-screen fs-1 text-whatsapp-teal mb-3"></i>
+            <p class="mb-1 fw-semibold">No WhatsApp Sessions Found</p>
+            <p class="small text-muted">Create a session using the form below to begin linking WhatsApp.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Create Session Card -->
+    <div class="card shadow-sm border">
+      <div class="card-header bg-white py-3">
+        <h5 class="card-title mb-0 fw-bold text-dark">Create WhatsApp Session</h5>
+      </div>
+      <div class="card-body">
+        <form id="create-session-form" onsubmit="handleCreateSession(event)">
+          <div class="mb-3">
+            <label for="new-session-name" class="form-label small fw-semibold">Session Identifier (letters, numbers, dashes, underscores)</label>
+            <input type="text" class="form-control" id="new-session-name" placeholder="e.g. support-line" pattern="[a-zA-Z0-9_\-]+" required <%= !config.apiKey ? 'disabled' : '' %>>
+          </div>
+          <button type="submit" class="btn btn-whatsapp-teal" <%= !config.apiKey ? 'disabled' : '' %>>
+            <i class="fa-solid fa-plus me-1"></i> Create Session
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Side: QR Scanner Sticky -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm border sticky-top" style="top: 1.5rem; z-index: 100;">
+      <div class="card-header bg-white py-3">
+        <h5 class="card-title mb-0 fw-bold text-dark">Link Device via QR</h5>
+      </div>
+      <div class="card-body text-center py-4">
+        <div class="qr-container py-5" id="qr-container-box" style="min-height: 300px;">
+          <div class="qr-placeholder" id="qr-status-placeholder">
+            <i class="fa-solid fa-qrcode fs-1 text-muted mb-3"></i>
+            <p class="fw-semibold mb-1">QR Scanner Ready</p>
+            <p class="text-muted small mb-0 px-3">Select a session card and click <strong>Scan QR</strong> to fetch the WhatsApp connection code.</p>
+          </div>
+          <div id="qr-image-wrapper" class="d-none w-100">
+            <img src="" alt="WhatsApp QR Code" class="qr-image mb-3" id="qr-code-img">
+            <div class="px-2">
+              <h6 class="fw-bold mb-1">Scan Code</h6>
+              <p class="text-muted small mb-3">Open WhatsApp on your phone, navigate to Linked Devices, and scan this code.</p>
+            </div>
+            <div class="spinner-border text-whatsapp-teal mb-2" id="qr-polling-spinner" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted small" id="qr-polling-text">Waiting for scan connection...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="card shadow-sm border">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+    <h5 class="card-title mb-0 fw-bold text-dark">Message Delivery Logs</h5>
+    <button class="btn btn-outline-secondary btn-sm" onclick="refreshMessageLogs()">
+      <i class="fa-solid fa-rotate me-1"></i> Refresh Logs
+    </button>
+  </div>
+  
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Timestamp</th>
+            <th>Session</th>
+            <th>Recipient</th>
+            <th>Content</th>
+            <th>Attachment</th>
+            <th>Status</th>
+            <th class="pe-3">WhatsApp Message ID / Failure Reason</th>
+          </tr>
+        </thead>
+        <tbody id="logs-table-body">
+          <% if (messages && messages.length > 0) { %>
+            <% messages.forEach(msg => { %>
+              <tr>
+                <td class="ps-3"><%= new Date(msg.createdAt).toLocaleString() %></td>
+                <td><span class="badge bg-light text-dark border"><%= msg.sessionId %></span></td>
+                <td><span class="badge bg-light text-dark border"><%= msg.chatId %></span></td>
+                <td class="msg-text-cell" title="<%= msg.text %>"><%= msg.text %></td>
+                <td>
+                  <% if (msg.mediaUrl) { %>
+                    <a href="<%= msg.mediaUrl %>" target="_blank" class="text-whatsapp-teal text-decoration-underline small">View File</a>
+                  <% } else { %>
+                    <span class="text-muted small">None</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (msg.status === 'sent') { %>
+                    <span class="badge bg-success text-white">SENT</span>
+                  <% } else { %>
+                    <span class="badge bg-danger text-white">FAILED</span>
+                  <% } %>
+                </td>
+                <td class="pe-3">
+                  <% if (msg.status === 'sent') { %>
+                    <code class="small text-muted font-monospace"><%= msg.messageId %></code>
+                  <% } else { %>
+                    <span class="text-danger small"><%= msg.error %></span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center text-muted py-5">
+                <i class="fa-solid fa-envelope-open fs-2 text-muted mb-3 d-block"></i>
+                No messages sent yet.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
