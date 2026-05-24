@@ -7,8 +7,8 @@ let authAction = 'login';
 function switchTab(tabName) {
   // Update nav link active states
   document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
-  // Update pane active states
-  document.querySelectorAll('.tab-pane').forEach(pane => {
+  // Update pane active states (only top-level main panes, to prevent breaking nested tabs)
+  document.querySelectorAll('main > .tab-pane').forEach(pane => {
     pane.classList.add('d-none');
     pane.classList.remove('show', 'active');
   });
