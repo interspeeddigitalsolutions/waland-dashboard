@@ -25,6 +25,8 @@ async function ensureActiveOrg(req, res, next) {
       activeOrgSet = true;
     } catch (err) {
       console.warn('Failed to auto-set active organization on request:', err.message);
+      // Prevent repeating failed attempts on every request
+      activeOrgSet = true;
     }
   }
   next();
@@ -153,8 +155,8 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Name, email, and password are required' });
     }
     const data = await waland.signUp(name, email, password);
-    // Auto-save token
-    saveConfig({ token: data.token });
+    // Auto-save token and credentials
+    saveConfig({ token: data.token, email, password });
     activeOrgSet = false;
     res.json({ success: true, token: data.token, user: data.user });
   } catch (err) {
@@ -169,8 +171,8 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password are required' });
     }
     const data = await waland.signIn(email, password);
-    // Auto-save token
-    saveConfig({ token: data.token });
+    // Auto-save token and credentials
+    saveConfig({ token: data.token, email, password });
     activeOrgSet = false;
     res.json({ success: true, token: data.token, user: data.user });
   } catch (err) {
@@ -399,4 +401,27 @@ app.listen(port, () => {
   console.log(`Waland Wrapper Server running on port ${port}`);
   console.log(`URL: http://localhost:${port}`);
   console.log(`===============================================`);
+  
+  // Periodic background WhatsApp session synchronization (every 30 seconds)
+  setInterval(async () => {
+    const config = waland.readConfig();
+    if (config.apiKey) {
+      try {
+        const walandSessions = await waland.listSessions();
+        for (const ws of walandSessions) {
+          await db.saveSession({
+            id: ws.id,
+            name: ws.name,
+            status: ws.status,
+            phone: ws.phone,
+            pushName: ws.pushName,
+            lastError: ws.lastError,
+            createdAt: ws.createdAt
+          });
+        }
+      } catch (err) {
+        console.warn('Background WhatsApp session sync failed:', err.message);
+      }
+    }
+  }, 30 * 1000);
 });

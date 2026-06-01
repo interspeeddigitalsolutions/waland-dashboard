@@ -615,9 +615,65 @@ function copyCode(elementId) {
   });
 }
 
+// Poll all sessions status periodically from local database
+function startAllSessionsPolling() {
+  setInterval(async () => {
+    try {
+      const res = await fetch('/api/sessions');
+      const data = await res.json();
+      if (data.success) {
+        data.sessions.forEach(session => {
+          updateLocalBadge(session.id, session.status);
+          
+          // Also update phone and push name if they changed
+          const card = document.getElementById(`session-card-${session.id}`);
+          if (card) {
+            // Locate Phone element specifically using its structure
+            const phoneLabel = Array.from(card.querySelectorAll('span')).find(el => el.innerText.trim() === 'Phone:');
+            if (phoneLabel && phoneLabel.nextElementSibling) {
+              phoneLabel.nextElementSibling.innerText = session.phone || 'Not Linked';
+            }
+            
+            // Locate Push Name element specifically using its structure
+            const pushNameLabel = Array.from(card.querySelectorAll('span')).find(el => el.innerText.trim() === 'Push Name:');
+            if (pushNameLabel && pushNameLabel.nextElementSibling) {
+              pushNameLabel.nextElementSibling.innerText = session.pushName || 'N/A';
+            }
+          }
+          
+          // Update error banner if any
+          const errorEl = document.getElementById(`error-${session.id}`);
+          if (session.lastError && session.lastError !== 'stopped by user') {
+            if (errorEl) {
+              errorEl.innerHTML = `<strong>Error:</strong> ${session.lastError}`;
+              errorEl.classList.remove('d-none');
+            }
+          } else {
+            if (errorEl) errorEl.classList.add('d-none');
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error polling all sessions:', err);
+    }
+  }, 5000);
+}
+
 window.addEventListener('load', () => {
   const originSpan = document.getElementById('curl-local-origin');
   if (originSpan) {
     originSpan.innerText = window.location.origin;
   }
+  
+  // Start general polling of all sessions
+  startAllSessionsPolling();
+  
+  // Find sessions that are in transition states and start detailed polling for them
+  document.querySelectorAll('[id^="status-badge-"]').forEach(badge => {
+    const sessionId = badge.id.replace('status-badge-', '');
+    const statusText = badge.innerText.trim().toLowerCase();
+    if (['initializing', 'qr_ready', 'authenticating'].some(state => statusText.includes(state))) {
+      pollSessionStatus(sessionId);
+    }
+  });
 });

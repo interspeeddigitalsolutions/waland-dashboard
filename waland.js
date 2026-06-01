@@ -49,14 +49,51 @@ function getClient(useAuthToken = false) {
   });
 }
 
+// Helper to perform auth requests with auto-refresh on 401 Unauthorized
+async function performAuthRequest(requestFn) {
+  let res = await requestFn(getClient(true));
+  if (res.status === 401) {
+    const config = readConfig();
+    if (config.email && config.password) {
+      try {
+        console.log('User Session Token expired. Attempting automatic re-authentication...');
+        const loginClient = axios.create({
+          baseURL: config.baseUrl,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Origin': config.baseUrl
+          },
+          validateStatus: () => true
+        });
+        const loginRes = await loginClient.post('/auth/sign-in/email', {
+          email: config.email,
+          password: config.password
+        });
+        if (loginRes.status === 200 && loginRes.data?.token) {
+          const newToken = loginRes.data.token;
+          console.log('Successfully re-authenticated. Saving new User Session Token.');
+          
+          const updated = { ...config, token: newToken };
+          fs.writeFileSync(configPath, JSON.stringify(updated, null, 2), 'utf8');
+          
+          res = await requestFn(getClient(true));
+        }
+      } catch (err) {
+        console.error('Automatic re-authentication failed:', err.message);
+      }
+    }
+  }
+  return res;
+}
+
 module.exports = {
   readConfig,
   
   // ── Auth Endpoints (Using Session Token) ──
 
   setActiveOrg: async (organizationId) => {
-    const client = getClient(true);
-    const res = await client.post('/auth/organization/set-active', { organizationId });
+    const res = await performAuthRequest(client => client.post('/auth/organization/set-active', { organizationId }));
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to set active organization: ${res.status}`);
     }
@@ -82,8 +119,7 @@ module.exports = {
   },
 
   listOrganizations: async () => {
-    const client = getClient(true);
-    const res = await client.get('/auth/organization/list');
+    const res = await performAuthRequest(client => client.get('/auth/organization/list'));
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to fetch organization list: ${res.status}`);
     }
@@ -91,8 +127,7 @@ module.exports = {
   },
 
   createApiKey: async (name, organizationId) => {
-    const client = getClient(true);
-    const res = await client.post('/auth/api-key/create', { name, organizationId });
+    const res = await performAuthRequest(client => client.post('/auth/api-key/create', { name, organizationId }));
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to create API key: ${res.status}`);
     }
@@ -102,7 +137,7 @@ module.exports = {
   // ── M2M WhatsApp Endpoints ──
 
   createSession: async (name) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.post('/v1/sessions', { name });
     if (res.status === 409) {
       throw new Error('Conflict: A session with this name already exists.');
@@ -114,7 +149,7 @@ module.exports = {
   },
 
   startSession: async (sessionId) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.post(`/v1/sessions/${sessionId}/start`);
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to start session: ${res.status}`);
@@ -123,7 +158,7 @@ module.exports = {
   },
 
   stopSession: async (sessionId) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.post(`/v1/sessions/${sessionId}/stop`);
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to stop session: ${res.status}`);
@@ -132,7 +167,7 @@ module.exports = {
   },
 
   deleteSession: async (sessionId) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.delete(`/v1/sessions/${sessionId}`);
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to delete session: ${res.status}`);
@@ -141,7 +176,7 @@ module.exports = {
   },
 
   getSessionStatus: async (sessionId) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.get(`/v1/sessions/${sessionId}`);
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to get session status: ${res.status}`);
@@ -150,7 +185,7 @@ module.exports = {
   },
 
   getQrCode: async (sessionId) => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.get(`/v1/sessions/${sessionId}/qr`);
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to fetch QR code: ${res.status}`);
@@ -172,7 +207,7 @@ module.exports = {
   },
 
   listSessions: async () => {
-    const client = getClient(true);
+    const client = getClient(false);
     const res = await client.get('/v1/sessions');
     if (res.status >= 400) {
       throw new Error(res.data?.message || `Failed to list sessions from Waland: ${res.status}`);
